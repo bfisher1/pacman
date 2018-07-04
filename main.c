@@ -11,6 +11,7 @@
 #include <time.h>
 #include "Level.h"
 #include "actor.h"
+#include "util.h"
 
 /**
     Starting point of the program.
@@ -35,14 +36,24 @@ int main(int argc, char *argv[]){
     time_t t;
     srand((unsigned) time(&t));
 
-    Pacman *pacman = createPacman(1,1);
+    int pacmanStartX = 1;
+    int pacmanStartY = 1;
+    
+    Pacman *pacman = createPacman(pacmanStartX, pacmanStartY);
+    int ghostNumber = 4;
+    Ghost *ghosts[ghostNumber];
+    for (int i = 0; i < ghostNumber; i++) {
+        ghosts[i] = createGhost(10, 3);
+    }
 
     float delay = .05;
     WINDOW * win = newwin(level->height + 2, level->width + 1, 0, 0);
     int key;
     clock_t start = clock();
     bool updateScreen = false;
-    while (true) {
+    bool gameOver = false;
+    int goalScore = countFood(level);
+    while (!gameOver) {
         
         if( (key = getch()) != ERR  ) {
             if(key ==  KEY_DOWN){
@@ -59,28 +70,77 @@ int main(int argc, char *argv[]){
             }
             updateScreen = true;
         }
+
+        for (int i = 0; i < ghostNumber; i++) {
+            if (readyToUpdate( (Actor *) ghosts[i]) ){
+                ghosts[i]->decide(ghosts[i], level, pacman);
+                moveActor((Actor *) ghosts[i], level);
+                break;
+            }
+        }
         
         if ( readyToUpdate((Actor *) pacman ) ){
-            //move stuff
-            //draw
             eatTile(pacman, level);
             moveActor((Actor *) pacman, level);
+        }
+
+        for (int i = 0; i < ghostNumber; i++) {
+            if (areColliding( (Actor *) pacman, (Actor *) ghosts[i] )) {
+                pacman->lives--;
+                pacman->x = pacmanStartX;
+                pacman->y = pacmanStartY;
+                
+                wclear(win);
+                drawLevel(level, win);
+                for (int i = 0; i < ghostNumber; i++) {
+                    drawActor( (Actor *) ghosts[i], win );
+                }
+                for (int i = 0; i < pacman->lives; i++) {
+                    mvwaddch(win, 10, i, '<');
+                }
+                wrefresh(win);
+                delayMs(1000);
+                if (pacman->lives <= 0) {
+                    gameOver = true;
+                }
+            }
+        }
+
+        if (pacman->score == goalScore) {
+            gameOver = true;
         }
 
         if( ((float)(clock() - start))/CLOCKS_PER_SEC >= delay ) {
             updateScreen = true;
         }
 
-        if (updateScreen){
+        if (updateScreen) {
             wclear(win);
             drawLevel(level, win);
+            for (int i = 0; i < ghostNumber; i++) {
+                drawActor( (Actor *) ghosts[i], win );
+            }
             drawActor( (Actor *) pacman, win);
+            for (int i = 0; i < pacman->lives; i++) {
+                mvwaddch(win, 10, i, '<');
+            }
             wrefresh(win);
             start = clock();
         }
     }
-
+    int finalScore = pacman->score;
+    freePacman(pacman);
+    for (int i = 0; i < ghostNumber; i++) {
+        freeGhost(ghosts[i]);
+    }
     freeLevel(level);
     endwin();
+    if (finalScore == goalScore) {
+        printf("YOU WIN!\n");
+    }
+    else {
+        printf("GAME OVER. SCORE: %d\n", finalScore);
+    }
+    
     return EXIT_SUCCESS;
 }

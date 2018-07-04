@@ -14,6 +14,8 @@
 #include <time.h>
 #include "util.h"
 
+#ifndef ACTOR
+#define ACTOR
 /**
     Structure for an actor, containing coordinates, speed,
     direction, and a display character, and a timestamp
@@ -137,3 +139,14 @@ void changePacmanDir(Pacman *pacman, Level *level, Direction newDir);
     @param level the level pacman is in
 */
 void eatTile(Pacman *pacman, Level *level);
+
+/**
+    Determines if 2 actors are colliding.
+
+    @param actor1 first actor that might be colliding with the other
+    @param actor2 second actor that might be colliding with the other
+
+    @return true if the actors are colliding, false if not
+*/
+bool areColliding(Actor *actor1, Actor *actor2);
+#endif /* ACTOR */

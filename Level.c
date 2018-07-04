@@ -87,7 +87,7 @@ void drawLevel(Level *level, WINDOW *win){
             char tileChar;
             switch (tile) {
                 case WALL:
-                    tileChar = '0';
+                    tileChar = '|';
                     break;
                 case FOOD:
                     tileChar = '.';
@@ -104,6 +104,7 @@ void drawLevel(Level *level, WINDOW *win){
     }
     
 }
+
 Tile getLevelTileAt(Level *level, int x, int y){
     if (x < 0 || x >= level->width || y < 0 || y >= level->height) {
         return OUTSIDE;
@@ -117,4 +118,16 @@ void freeLevel(Level *level){
     }
     free(level->tiles);
     free(level);
+}
+
+int countFood(Level *level){
+    int count = 0;
+    for (int i = 0; i < level->height; i++) {
+        for (int j = 0; j < level->width; j++) {
+            if (level->tiles[i][j] == FOOD) {
+                count++;
+            }
+        }
+    }
+    return count;
 }

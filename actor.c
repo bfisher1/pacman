@@ -46,9 +46,17 @@ void wander(Ghost *ghost, Level *level, Pacman *pacman){
     }
     int goalX, goalY;
     getGoalCoordinates((Actor *) ghost, &goalX, &goalY);
-    if( getLevelTileAt(level, goalX, goalY) == WALL ){
+    if ( getLevelTileAt(level, goalX, goalY) == WALL ){
         //eventually make random
-        ghost->dir = LEFT;
+        Direction dirs[4] = {UP, DOWN, LEFT, RIGHT};
+        int newDirIdx = randInt(0,3);
+        for (int i = newDirIdx; i < newDirIdx + 4; i++){
+            ghost->dir = dirs[i % 4];
+            getGoalCoordinates((Actor *) ghost, &goalX, &goalY);
+            if (getLevelTileAt(level, goalX, goalY) != WALL){
+                break;
+            }
+        }
     }
 }
 
@@ -83,7 +91,7 @@ void fillActor(Actor *actor, int x, int y, float speed, char body, Direction dir
 
 Ghost *createGhost(int x, int y){
     Ghost *ghost = (Ghost *) malloc(sizeof(Ghost));
-    fillActor((Actor *) ghost, x, y, .3, 'G', NONE);
+    fillActor((Actor *) ghost, x, y, .3, '0', NONE);
     
     //eventually have ghosts that follow player or switch direction randomly, even before wall
     /*
@@ -110,6 +118,7 @@ Pacman *createPacman(int x, int y){
     Pacman *pacman = (Pacman *) malloc(sizeof(Pacman));
     fillActor((Actor *) pacman, x, y, .2, '<', RIGHT);
     pacman->score = 0;
+    pacman->lives = 3;
     return pacman;
 }
 
@@ -117,14 +126,28 @@ void freePacman(Pacman *pacman){
     free(pacman);
 }
 
-void moveActor(Actor *actor, Level *level){
+void moveActor(Actor *actor, Level *level) {
     int goalX, goalY;
     getGoalCoordinates(actor, &goalX, &goalY);
     Tile goalTile = getLevelTileAt(level, goalX, goalY);
     //TODO eventually update for pacman boundaries
-    if(goalTile != OUTSIDE && goalTile != WALL){
+    if (goalTile != WALL){
         actor->x = goalX;
         actor->y = goalY;
+    }
+    if (goalTile == OUTSIDE) {
+        if (actor->x < 0) {
+            actor->x = level->width - 1;
+        }
+        else if (actor->x > level->width - 1) {
+            actor->x = 0;
+        }
+        else if (actor->y < 0) {
+            actor->y = level->height - 1;
+        }
+        else if (actor->y > level->height - 1) {
+            actor->y = 0;
+        }
     }
     actor->lastUpdate = clock();
 }
@@ -167,4 +190,8 @@ void eatTile(Pacman *pacman, Level *level){
         setLevelTile(level, pacman->x, pacman->y, EMPTY);
         pacman->score++;
     }
+}
+
+bool areColliding(Actor *actor1, Actor *actor2) {
+    return actor1->x == actor2->x && actor1->y == actor2->y;
 }

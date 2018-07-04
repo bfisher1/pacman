@@ -77,4 +77,13 @@ Tile getLevelTileAt(Level *level, int x, int y);
     @param level the level being freed
 */
 void freeLevel(Level *level);
+
+/**
+    Counts the amount of food in the level.
+
+    @param level the level having its food counted
+
+    @return the number of food items in the level
+*/
+int countFood(Level *level);
 #endif /* LEVEL */
