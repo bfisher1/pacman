@@ -87,7 +87,7 @@ void drawLevel(Level *level, WINDOW *win){
             char tileChar;
             switch (tile) {
                 case WALL:
-                    tileChar = 'W';
+                    tileChar = '0';
                     break;
                 case FOOD:
                     tileChar = '.';

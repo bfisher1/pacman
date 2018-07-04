@@ -10,6 +10,7 @@
 #include <ncurses.h>
 #include <time.h>
 #include "Level.h"
+#include "actor.h"
 
 /**
     Starting point of the program.
@@ -34,36 +35,47 @@ int main(int argc, char *argv[]){
     time_t t;
     srand((unsigned) time(&t));
 
+    Pacman *pacman = createPacman(1,1);
+
     float delay = .05;
     WINDOW * win = newwin(level->height + 2, level->width + 1, 0, 0);
     int key;
     clock_t start = clock();
+    bool updateScreen = false;
     while (true) {
         
         if( (key = getch()) != ERR  ) {
-            /*
             if(key ==  KEY_DOWN){
-                changeSnakeDir(snake, DOWN);
+                changePacmanDir(pacman, level, DOWN);
             }
             else if ( key == KEY_UP ){
-                changeSnakeDir(snake, UP);
+                changePacmanDir(pacman, level, UP);
             }
             else if(key == KEY_RIGHT ){
-                changeSnakeDir(snake, RIGHT);
+                changePacmanDir(pacman, level, RIGHT);
             }
             else if(key ==  KEY_LEFT ){
-                changeSnakeDir(snake, LEFT);
+                changePacmanDir( pacman, level, LEFT);
             }
-            */
+            updateScreen = true;
         }
         
-        if( ((float)(clock() - start))/CLOCKS_PER_SEC >= delay ){
-            wclear(win);
+        if ( readyToUpdate((Actor *) pacman ) ){
             //move stuff
             //draw
+            eatTile(pacman, level);
+            moveActor((Actor *) pacman, level);
+        }
+
+        if( ((float)(clock() - start))/CLOCKS_PER_SEC >= delay ) {
+            updateScreen = true;
+        }
+
+        if (updateScreen){
+            wclear(win);
             drawLevel(level, win);
+            drawActor( (Actor *) pacman, win);
             wrefresh(win);
-            
             start = clock();
         }
     }
